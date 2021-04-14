@@ -1,0 +1,21 @@
+{
+  "include": ["src"],
+  "compilerOptions": {
+    "outDir": "lib",
+    "rootDir": "src",
+
+    "target": "es6",
+
+    "declaration": true,
+    "declarationMap": true,
+
+    "module": "commonjs",
+    "moduleResolution": "node",
+
+    "strictNullChecks": true,
+
+    "types": ["node"],
+
+    "lib": ["es2019"]
+  }
+}
