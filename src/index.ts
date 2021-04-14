@@ -60,13 +60,51 @@ const isTypescriptPathsModule: (workingDir?: string) => IMatcherFunction = (work
   return false;
 };
 
+const makeTsRules = (styleApi: IStyleAPI, isolatePaths = true, workingDir?: string) => {
+  const {
+    alias,
+    and,
+    isAbsoluteModule,
+    moduleName,
+    naturally,
+    unicode,
+  } = styleApi;
+
+  if (isolatePaths) {
+    const paths = getTypescriptPaths(workingDir);
+    const ret: IStyleItem[] = [];
+
+    for (let i = 0; i < paths.length; i++) {
+      ret.push({
+        match: and(isAbsoluteModule, isTypescriptPathModule(paths[i])),
+        sort: moduleName(naturally),
+        sortNamedMembers: alias(unicode),
+      });
+      ret.push({
+        separator: true
+      });
+    }
+
+    return ret;
+  }
+
+  return [
+    {
+      match: and(isAbsoluteModule, isTypescriptPathsModule(workingDir)),
+      sort: moduleName(naturally),
+      sortNamedMembers: alias(unicode),
+    },
+    { separator: true }
+  ];
+};
+
 /**
- * 1. Node modules.
- * 2. Absolute imports without members.
+ * 1. Absolute imports without members.
+ * 2. Node modules.
  * 3. Absolute imports with members.
  * 4. Typescript path imports.
- * 6. Relative imports with members.
- * 7. Relative imports without members.
+ * 5. Relative imports with members.
+ * 6. Relative imports without members.
  */
 const styleModuleTsconfig = (
   styleApi: IStyleAPI,
@@ -90,17 +128,17 @@ const styleModuleTsconfig = (
     unicode,
   } = styleApi;
 
-  return [
+  const preTs = [
+    // import "foo"
+    { match: and(hasNoMember, isAbsoluteModule, not(isTypescriptPathsModule(workingDir))) },
+    { separator: true },
+
     // import … from "fs";
     {
       match: isNodeModule,
       sort: moduleName(naturally),
       sortNamedMembers: alias(unicode),
     },
-    { separator: true },
-
-    // import "foo"
-    { match: and(hasNoMember, isAbsoluteModule, not(isTypescriptPathsModule(workingDir))) },
     { separator: true },
 
     // import … from "foo";
@@ -110,20 +148,9 @@ const styleModuleTsconfig = (
       sortNamedMembers: alias(unicode),
     },
     { separator: true },
+  ];
 
-    // import "foo"; // import … from "foo";
-    ...isolatePaths
-      ? getTypescriptPaths(workingDir).map(path => ({
-        match: and(isAbsoluteModule, isTypescriptPathModule(path)),
-        sort: moduleName(naturally),
-        sortNamedMembers: alias(unicode),
-      }))
-      : [{
-        match: and(isAbsoluteModule, isTypescriptPathsModule(workingDir)),
-        sort: moduleName(naturally),
-        sortNamedMembers: alias(unicode),
-      }],
-
+  const postTs = [
     // import … from "./foo";
     // import … from "../foo";
     {
@@ -136,6 +163,12 @@ const styleModuleTsconfig = (
     // import "./foo"
     { match: and(hasNoMember, isRelativeModule) },
     { separator: true },
+  ]
+
+  return [
+    ...preTs,
+    ...makeTsRules(styleApi, isolatePaths, workingDir),
+    ...postTs
   ];
 }
 

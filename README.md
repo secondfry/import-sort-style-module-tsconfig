@@ -8,8 +8,8 @@ Finds your `tsconfig.json` and uses that to separate imports.
   - [Options](#options)
 
 ## Sort order
-1. Node modules.
-2. Absolute imports without members.
+1. Absolute imports without members.
+2. Node modules.
 3. Absolute imports with members.
 4. Typescript path imports.
 5. Relative imports with members.
