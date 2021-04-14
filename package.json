@@ -1,6 +1,6 @@
 {
   "name": "import-sort-style-module-tsconfig",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "import-sort-style-module but treating tsconfig paths as local modules",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -22,6 +22,7 @@
     "@types/chai": "^4.2.16",
     "@types/mocha": "^8.2.2",
     "@types/node": "^14.14.37",
+    "@types/vscode": "^1.55.0",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "chai": "^4.3.4",

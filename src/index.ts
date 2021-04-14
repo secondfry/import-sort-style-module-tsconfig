@@ -1,10 +1,25 @@
-import { IMatcherFunction, IStyleAPI, IStyleItem } from 'import-sort-style';
-
 import { IImport } from 'import-sort-parser';
+import { IMatcherFunction, IStyleAPI, IStyleItem } from 'import-sort-style';
 import { loadConfig } from 'tsconfig-paths';
+import * as vscode from 'vscode';
+
+const findVscodeWorkspace = () => {
+  if (!vscode || !vscode.workspace.workspaceFolders) {
+    return null;
+  }
+
+  for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
+    const folder = vscode.workspace.workspaceFolders[i];
+    if (folder.uri.scheme === 'file') {
+      return folder.uri.path;
+    }
+  }
+
+  return null;
+}
 
 const getTypescriptPaths = (): string[] => {
-  const res = loadConfig();
+  const res = loadConfig(findVscodeWorkspace() ?? process.cwd());
 
   if (res.resultType === 'failed') {
     return [];
