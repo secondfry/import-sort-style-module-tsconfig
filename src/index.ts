@@ -1,7 +1,17 @@
 import { IImport } from 'import-sort-parser';
 import { IMatcherFunction, IStyleAPI, IStyleItem } from 'import-sort-style';
 import { loadConfig } from 'tsconfig-paths';
-import * as vscode from 'vscode';
+import * as vscodeType from 'vscode';
+
+type TOptions = {
+  isolatePaths?: boolean,
+  workingDir?: string
+};
+
+let vscode: typeof vscodeType;
+try {
+  vscode = require('vscode');
+} catch (e) { /* it's ok */ }
 
 const findVscodeWorkspace = () => {
   if (!vscode || !vscode.workspace.workspaceFolders) {
@@ -18,8 +28,8 @@ const findVscodeWorkspace = () => {
   return null;
 }
 
-const getTypescriptPaths = (): string[] => {
-  const res = loadConfig(findVscodeWorkspace() ?? process.cwd());
+const getTypescriptPaths = (workingDir?: string): string[] => {
+  const res = loadConfig(workingDir ?? findVscodeWorkspace() ?? process.cwd());
 
   if (res.resultType === 'failed') {
     return [];
@@ -34,8 +44,12 @@ const getTypescriptPaths = (): string[] => {
   return paths;
 };
 
-const isTypescriptPathModule: IMatcherFunction = (imp: IImport): boolean => {
-  const paths = getTypescriptPaths();
+const isTypescriptPathModule: (path: string) => IMatcherFunction = (path: string) => (imp: IImport): boolean => {
+  return imp.moduleName.startsWith(path);
+}
+
+const isTypescriptPathsModule: (workingDir?: string) => IMatcherFunction = (workingDir: string) => (imp: IImport): boolean => {
+  const paths = getTypescriptPaths(workingDir);
 
   for (let i = 0; i < paths.length; i++) {
     if (imp.moduleName.startsWith(paths[i])) {
@@ -54,7 +68,14 @@ const isTypescriptPathModule: IMatcherFunction = (imp: IImport): boolean => {
  * 6. Relative imports with members.
  * 7. Relative imports without members.
  */
-export default function (styleApi: IStyleAPI): IStyleItem[] {
+const styleModuleTsconfig = (
+  styleApi: IStyleAPI,
+  _filename: string,
+  {
+    isolatePaths = true,
+    workingDir
+  }: TOptions
+): IStyleItem[] => {
   const {
     alias,
     and,
@@ -79,24 +100,29 @@ export default function (styleApi: IStyleAPI): IStyleItem[] {
     { separator: true },
 
     // import "foo"
-    { match: and(hasNoMember, isAbsoluteModule, not(isTypescriptPathModule)) },
+    { match: and(hasNoMember, isAbsoluteModule, not(isTypescriptPathsModule(workingDir))) },
     { separator: true },
 
     // import … from "foo";
     {
-      match: and(isAbsoluteModule, not(isTypescriptPathModule)),
+      match: and(isAbsoluteModule, not(isTypescriptPathsModule(workingDir))),
       sort: moduleName(naturally),
       sortNamedMembers: alias(unicode),
     },
     { separator: true },
 
     // import "foo"; // import … from "foo";
-    {
-      match: and(isAbsoluteModule, isTypescriptPathModule),
-      sort: moduleName(naturally),
-      sortNamedMembers: alias(unicode),
-    },
-    { separator: true },
+    ...isolatePaths
+      ? getTypescriptPaths(workingDir).map(path => ({
+        match: and(isAbsoluteModule, isTypescriptPathModule(path)),
+        sort: moduleName(naturally),
+        sortNamedMembers: alias(unicode),
+      }))
+      : [{
+        match: and(isAbsoluteModule, isTypescriptPathsModule(workingDir)),
+        sort: moduleName(naturally),
+        sortNamedMembers: alias(unicode),
+      }],
 
     // import … from "./foo";
     // import … from "../foo";
@@ -112,3 +138,5 @@ export default function (styleApi: IStyleAPI): IStyleItem[] {
     { separator: true },
   ];
 }
+
+export default styleModuleTsconfig;

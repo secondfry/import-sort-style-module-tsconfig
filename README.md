@@ -1,7 +1,13 @@
 # import-sort-style-module-tsconfig
 Finds your `tsconfig.json` and uses that to separate imports.
 
-Sort order:
+- [import-sort-style-module-tsconfig](#import-sort-style-module-tsconfig)
+  - [Sort order](#sort-order)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Options](#options)
+
+## Sort order
 1. Node modules.
 2. Absolute imports without members.
 3. Absolute imports with members.
@@ -29,7 +35,8 @@ Add following to your `package.json`:
   "importSort": {
     ".ts, .tsx": {
       "parser": "typescript",
-      "style": "module-tsconfig"
+      "style": "module-tsconfig",
+      "options": {}
     }
   }
 ```
@@ -40,4 +47,11 @@ Either install [sort-imports][vsc-sort-imports] for VSCode, or use via CLI (file
 npx import-sort --write .
 ```
 
-[vcs-sort-imports]: https://marketplace.visualstudio.com/items?itemName=amatiasq.sort-imports
+## Options
+You may also pass options to this style by putting them to `options` directive in `package.json`.
+| Key          | Type    | Default | Description                                      |
+|--------------|---------|---------|--------------------------------------------------|
+| isolatePaths | boolean | true    | Separates every tsconfig path as new group       |
+| workingDir   | string  | unset   | Used as directory for `tsconfig.json` resolution |
+
+[vsc-sort-imports]: https://marketplace.visualstudio.com/items?itemName=amatiasq.sort-imports

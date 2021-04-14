@@ -1,6 +1,6 @@
 {
   "name": "import-sort-style-module-tsconfig",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "import-sort-style-module but treating tsconfig paths separately",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
