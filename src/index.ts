@@ -1,5 +1,5 @@
-import { IImport } from 'import-sort-parser';
-import { IMatcherFunction, IStyleAPI, IStyleItem } from 'import-sort-style';
+import { IImport } from 'forked-import-sort-parser';
+import { IMatcherFunction, IStyleAPI, IStyleItem } from 'forked-import-sort-style';
 import { loadConfig } from 'tsconfig-paths';
 import * as vscodeType from 'vscode';
 
@@ -64,6 +64,7 @@ const makeTsRules = (styleApi: IStyleAPI, isolatePaths = true, workingDir?: stri
   const {
     alias,
     and,
+    hasMember,
     isAbsoluteModule,
     moduleName,
     naturally,
@@ -72,29 +73,50 @@ const makeTsRules = (styleApi: IStyleAPI, isolatePaths = true, workingDir?: stri
 
   if (isolatePaths) {
     const paths = getTypescriptPaths(workingDir);
-    const ret: IStyleItem[] = [];
+    const retWithMembers: IStyleItem[] = [];
+    const retRest: IStyleItem[] = [];
 
     for (let i = 0; i < paths.length; i++) {
-      ret.push({
+      retWithMembers.push({
+        match: and(hasMember, isAbsoluteModule, isTypescriptPathModule(paths[i])),
+        sort: moduleName(naturally),
+        sortNamedMembers: alias(unicode),
+      });
+      retWithMembers.push({
+        separator: true
+      });
+      retRest.push({
         match: and(isAbsoluteModule, isTypescriptPathModule(paths[i])),
         sort: moduleName(naturally),
         sortNamedMembers: alias(unicode),
       });
-      ret.push({
+      retRest.push({
         separator: true
       });
     }
 
-    return ret;
+    return [
+      ...retWithMembers,
+      ...retRest
+    ];
   }
 
   return [
+    // import MyComponent from "src/..."
+    {
+      match: and(hasMember, isAbsoluteModule, isTypescriptPathsModule(workingDir)),
+      sort: moduleName(naturally),
+      sortNamedMembers: alias(unicode),
+    },
+    { separator: true },
+
+    // import "src/..."
     {
       match: and(isAbsoluteModule, isTypescriptPathsModule(workingDir)),
       sort: moduleName(naturally),
       sortNamedMembers: alias(unicode),
     },
-    { separator: true }
+    { separator: true },
   ];
 };
 
@@ -118,6 +140,7 @@ const styleModuleTsconfig = (
     alias,
     and,
     dotSegmentCount,
+    hasMember,
     hasNoMember,
     isAbsoluteModule,
     isNodeModule,
@@ -154,14 +177,17 @@ const styleModuleTsconfig = (
     // import … from "./foo";
     // import … from "../foo";
     {
-      match: isRelativeModule,
+      match: and(hasMember, isRelativeModule),
       sort: [dotSegmentCount, moduleName(naturally)],
       sortNamedMembers: alias(unicode),
     },
     { separator: true },
 
     // import "./foo"
-    { match: and(hasNoMember, isRelativeModule) },
+    {
+      match: isRelativeModule,
+      sort: [dotSegmentCount, moduleName(naturally)],
+    },
     { separator: true },
   ]
 

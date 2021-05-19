@@ -11,16 +11,34 @@ Finds your `tsconfig.json` and uses that to separate imports.
 1. Absolute imports without members.
 2. Node modules.
 3. Absolute imports with members.
-4. Typescript path imports.
-5. Relative imports with members.
-6. Relative imports without members.
+4. Typescript path imports with members.
+5. Typescript path imports without members.
+6. Relative imports with members.
+7. Relative imports without members.
+
+Example:
+```typescript
+import 'ignore-styles';
+
+import path from 'path';
+
+import React from 'react';
+
+import MyComponent from 'src/components/my';
+
+import 'src/theme/style.css';
+
+import Box from './box';
+
+import './style.css';
+```
 
 ## Installation
 ```
 npm install --save-dev \
-  import-sort \
-  import-sort-cli \
-  import-sort-parser-typescript \
+  forked-import-sort \
+  forked-import-sort-cli \
+  forked-import-sort-parser-typescript \
   import-sort-style-module-tsconfig
 ```
 Add following to your `package.json`:
@@ -34,7 +52,7 @@ Add following to your `package.json`:
   },
   "importSort": {
     ".ts, .tsx": {
-      "parser": "typescript",
+      "parser": "forked-import-sort-parser-typescript",
       "style": "module-tsconfig",
       "options": {}
     }
