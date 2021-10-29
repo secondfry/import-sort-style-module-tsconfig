@@ -32,6 +32,7 @@ const getTypescriptPaths = (workingDir?: string): string[] => {
   const res = loadConfig(workingDir ?? findVscodeWorkspace() ?? process.cwd());
 
   if (res.resultType === 'failed') {
+    console.error(res);
     return [];
   }
 
